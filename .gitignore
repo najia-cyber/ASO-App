@@ -1,0 +1,217 @@
+# .gitignore for React Native Expo Mobile App
+# Copy this file to your project root as ".gitignore"
+
+# ============================================
+# Dependencies & Node
+# ============================================
+node_modules/
+/.pnp
+.pnp.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.npm
+.eslintcache
+
+# ============================================
+# Environment Variables (SECRETS - NEVER UPLOAD)
+# ============================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# ============================================
+# Expo & Build Files
+# ============================================
+.expo/
+.expo-shared/
+dist/
+build/
+.EAS/
+eas-build-artifacts/
+
+# ============================================
+# Platform-Specific Build Directories
+# ============================================
+# DO NOT upload native builds if not needed
+# These are generated during build process
+ios/Pods/
+ios/build/
+ios/Xcode.build/
+ios/*.pbxuser
+ios/*.perspectivev3
+ios/*.xcworkspace/xcuserdata/
+ios/*.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+ios/DerivedData/
+
+android/.gradle/
+android/local.properties
+android/app/build/
+android/*.jks
+android/*.keystore
+
+# ============================================
+# OS-Specific Files
+# ============================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.directory
+Desktop.ini
+
+# ============================================
+# IDE & Editor Files
+# ============================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.sublime-project
+*.sublime-workspace
+.history/
+.history
+*.sublime-project
+*.sublime-workspace
+*.netbeans
+.netbeans/
+.emacs*
+*#
+.#*
+
+# ============================================
+# JetBrains IDEs
+# ============================================
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# ============================================
+# Certificates & Keys (SECURITY - NEVER UPLOAD)
+# ============================================
+*.p8
+*.p12
+*.cer
+*.pem
+*.jks
+*.keystore
+*.key
+*.crt
+*.pfx
+distribution_key
+
+# ============================================
+# Apple/iOS Specific
+# ============================================
+.bundle
+*.ipa
+*.xcarchive
+*.dSYM
+.cert/
+.provisioning_profile/
+
+# ============================================
+# Android Specific
+# ============================================
+*.apk
+*.aab
+*.properties
+gradlew
+gradlew.bat
+google-services.json
+my-release-key.keystore
+
+# ============================================
+# Testing & Coverage
+# ============================================
+coverage/
+.nyc_output/
+.jest/
+__snapshots__/
+
+# ============================================
+# Debugging & Logs
+# ============================================
+*.log
+logs/
+*.trace
+*.pid
+*.seed
+*.pid.lock
+
+# ============================================
+# Temporary Files
+# ============================================
+tmp/
+temp/
+cache/
+.cache/
+*.tmp
+.vuepress/dist
+
+# ============================================
+# MacOS
+# ============================================
+.AppleDouble
+.LSOverride
+._*
+.apdisk
+
+# ============================================
+# Windows
+# ============================================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# ============================================
+# Linux
+# ============================================
+.directory
+.Trash-*
+
+# ============================================
+# Misc
+# ============================================
+*.pem
+*.pfx
+.prettierignore
+.prettierrc
+.yarnrc
+
+# ============================================
+# Docker (if using)
+# ============================================
+.dockerignore
+docker-compose.override.yml
+
+# ============================================
+# Package Manager Lock Files (Optional)
+# ============================================
+# Uncomment if you want to ignore lock files
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# ============================================
+# Backup Files
+# ============================================
+*.bak
+*.backup
+*.orig
+*.backup.js
