@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASO Platform - AI Powered</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0f1117; --bg2: #1a1d27; --bg3: #22263a; --border: #2e3250;
+    --text: #e8eaf6; --muted: #8b90b8; --accent: #6c63ff; --accent2: #4ecdc4;
+    --success: #56cc9d; --warning: #f7b731; --danger: #fc5c65; --card: #1e2235;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; }
+  .sidebar { width: 220px; background: var(--bg2); border-right: 1px solid var(--border); padding: 24px 0; display: flex; flex-direction: column; position: fixed; height: 100vh; overflow-y: auto; }
+  .logo { padding: 0 20px 24px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .logo h1 { font-size: 20px; font-weight: 700; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .logo p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 20px; cursor: pointer; color: var(--muted); font-size: 14px; transition: all 0.2s; border-left: 3px solid transparent; }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: rgba(108,99,255,0.1); color: var(--accent); border-left-color: var(--accent); }
+  .main { margin-left: 220px; flex: 1; padding: 28px; min-height: 100vh; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .page-header { margin-bottom: 24px; }
+  .page-header h2 { font-size: 22px; font-weight: 600; }
+  .page-header p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; margin-bottom: 24px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .stat-value { font-size: 28px; font-weight: 700; margin: 8px 0 4px; }
+  .stat-change { font-size: 12px; }
+  .stat-change.up { color: var(--success); }
+  .stat-change.down { color: var(--danger); }
+  .stat-label { font-size: 13px; color: var(--muted); }
+  .search-bar { display: flex; gap: 10px; margin-bottom: 20px; }
+  input[type="text"], textarea, select { background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 14px; outline: none; width: 100%; font-family: inherit; }
+  input[type="text"]:focus, textarea:focus, select:focus { border-color: var(--accent); }
+  .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #5a52e0; }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 6px; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { background: var(--bg3); padding: 12px 16px; text-align: left; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
+  td { padding: 13px 16px; border-top: 1px solid var(--border); }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-green { background: rgba(86,204,157,0.15); color: var(--success); }
+  .badge-red { background: rgba(252,92,101,0.15); color: var(--danger); }
+  .badge-yellow { background: rgba(247,183,49,0.15); color: var(--warning); }
+  .badge-purple { background: rgba(108,99,255,0.15); color: var(--accent); }
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 120px; padding: 0 4px; }
+  .bar { flex: 1; border-radius: 4px 4px 0 0; transition: opacity 0.2s; cursor: pointer; min-width: 20px; }
+  .bar:hover { opacity: 0.8; }
+  .bar-labels { display: flex; gap: 6px; padding: 0 4px; }
+  .bar-label-item { flex: 1; text-align: center; font-size: 10px; color: var(--muted); min-width: 20px; }
+  .tabs { display: flex; gap: 4px; background: var(--bg3); border-radius: 10px; padding: 4px; margin-bottom: 20px; width: fit-content; }
+  .tab { padding: 7px 16px; border-radius: 7px; cursor: pointer; font-size: 13px; color: var(--muted); transition: all 0.2s; }
+  .tab.active { background: var(--card); color: var(--text); }
+  .progress { height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
+  .progress-fill { height: 100%; border-radius: 4px; }
+  .review-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+  .section-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+  .flex-between { display: flex; justify-content: space-between; align-items: center; }
+  .mb-16 { margin-bottom: 16px; }
+  .mt-16 { margin-top: 16px; }
+  .mt-24 { margin-top: 24px; }
+  .text-sm { font-size: 13px; }
+  .text-muted { color: var(--muted); }
+  .text-success { color: var(--success); }
+  .text-danger { color: var(--danger); }
+  .text-warning { color: var(--warning); }
+  .text-accent { color: var(--accent); }
+  .fw-600 { font-weight: 600; }
+
+  /* AI Chat styles */
+  .ai-badge { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, rgba(108,99,255,0.2), rgba(78,205,196,0.2)); border: 1px solid rgba(108,99,255,0.4); border-radius: 20px; padding: 4px 12px; font-size: 12px; color: var(--accent); margin-bottom: 16px; }
+  .ai-response { background: linear-gradient(135deg, rgba(108,99,255,0.05), rgba(78,205,196,0.05)); border: 1px solid rgba(108,99,255,0.2); border-radius: 12px; padding: 20px; margin-top: 16px; line-height: 1.7; font-size: 14px; }
+  .ai-response h3 { color: var(--accent2); font-size: 15px; margin: 16px 0 8px; }
+  .ai-response h3:first-child { margin-top: 0; }
+  .ai-response ul { padding-left: 20px; margin: 8px 0; }
+  .ai-response li { margin-bottom: 6px; }
+  .ai-response strong { color: var(--text); }
+  .ai-response table { margin: 12px 0; }
+  .typing { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; padding: 12px 0; }
+  .typing-dots { display: flex; gap: 4px; }
+  .typing-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: bounce 1.2s infinite; }
+  .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+  .quick-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .quick-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg3); color: var(--muted); font-size: 12px; cursor: pointer; transition: all 0.2s; }
+  .quick-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .comp-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: flex; gap: 14px; align-items: center; margin-bottom: 12px; }
+  .app-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .sidebar-footer { margin-top: auto; padding: 16px 20px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+
+  /* AI Analyzer section */
+  .analyzer-wrap { max-width: 800px; }
+  .input-group { display: flex; flex-direction: column; gap: 12px; }
+  .chat-history { display: flex; flex-direction: column; gap: 16px; margin-top: 20px; }
+  .msg-user { background: var(--bg3); border-radius: 12px 12px 4px 12px; padding: 12px 16px; align-self: flex-end; max-width: 80%; font-size: 14px; }
+  .msg-ai { background: linear-gradient(135deg, rgba(108,99,255,0.08), rgba(78,205,196,0.08)); border: 1px solid rgba(108,99,255,0.2); border-radius: 12px 12px 12px 4px; padding: 16px; max-width: 90%; font-size: 14px; line-height: 1.7; }
+  .msg-ai h3 { color: var(--accent2); font-size: 14px; margin: 12px 0 6px; font-weight: 600; }
+  .msg-ai h3:first-child { margin-top: 0; }
+  .msg-ai ul { padding-left: 18px; }
+  .msg-ai li { margin-bottom: 4px; }
+  .msg-ai strong { color: var(--accent2); }
+  .msg-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="logo">
+    <h1>ASO Pro</h1>
+    <p>🤖 AI Powered</p>
+  </div>
+  <div class="nav-item active" onclick="showPage('dashboard',this)"><span>📊</span><span>Dashboard</span></div>
+  <div class="nav-item" onclick="showPage('ai-analyzer',this)"><span>🤖</span><span>AI Analyzer</span></div>
+  <div class="nav-item" onclick="showPage('keywords',this)"><span>🔍</span><span>Keywords</span></div>
+  <div class="nav-item" onclick="showPage('competitors',this)"><span>⚔️</span><span>Competitors</span></div>
+  <div class="nav-item" onclick="showPage('reviews',this)"><span>⭐</span><span>Reviews</span></div>
+  <div class="nav-item" onclick="showPage('analytics',this)"><span>📈</span><span>Analytics</span></div>
+  <div class="sidebar-footer">v3.0 · AI Edition</div>
+</nav>
+
+<main class="main">
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="page active">
+    <div class="page-header">
+      <h2>Dashboard</h2>
+      <p>Overview of your app's ASO performance</p>
+    </div>
+    <div class="grid-4">
+      <div class="stat-card"><div class="stat-label">App Store Rank</div><div class="stat-value text-accent">#14</div><div class="stat-change up">↑ 6 this week</div></div>
+      <div class="stat-card"><div class="stat-label">Downloads (30d)</div><div class="stat-value">48,290</div><div class="stat-change up">↑ 12.4%</div></div>
+      <div class="stat-card"><div class="stat-label">Avg Rating</div><div class="stat-value text-warning">4.6 ⭐</div><div class="stat-change up">↑ 0.2 this month</div></div>
+      <div class="stat-card"><div class="stat-label">Keywords Ranked</div><div class="stat-value">127</div><div class="stat-change up">↑ 18 new</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="flex-between mb-16"><div class="section-title">Download Trend</div></div>
+        <div class="bar-chart" id="dlChart"></div>
+        <div class="bar-labels" id="dlLabels"></div>
+      </div>
+      <div class="card">
+        <div class="section-title mb-16">ASO Health Score</div>
+        <div style="text-align:center;padding:10px 0">
+          <div style="font-size:52px;font-weight:700;color:var(--accent)">78</div>
+          <div class="text-muted text-sm">out of 100</div>
+        </div>
+        <div class="mt-16">
+          <div class="flex-between text-sm mb-16"><span class="text-muted">Title optimization</span><span class="text-success">92%</span></div>
+          <div class="progress"><div class="progress-fill" style="width:92%;background:var(--success)"></div></div>
+          <div class="flex-between text-sm mb-16"><span class="text-muted">Keyword density</span><span class="text-warning">68%</span></div>
+          <div class="progress"><div class="progress-fill" style="width:68%;background:var(--warning)"></div></div>
+          <div class="flex-between text-sm mb-16"><span class="text-muted">Screenshot quality</span><span class="text-success">85%</span></div>
+          <div class="progress"><div class="progress-fill" style="width:85%;background:var(--success)"></div></div>
+          <div class="flex-between text-sm"><span class="text-muted">Review response rate</span><span class="text-danger">45%</span></div>
+          <div class="progress"><div class="progress-fill" style="width:45%;background:var(--danger)"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="background:linear-gradient(135deg,rgba(108,99,255,0.1),rgba(78,205,196,0.1));border-color:rgba(108,99,255,0.3)">
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="font-size:40px">🤖</div>
+        <div style="flex:1">
+          <div class="fw-600" style="font-size:16px;margin-bottom:4px">AI ASO Analyzer is ready!</div>
+          <div class="text-muted text-sm">Get real AI-powered keyword research, competitor analysis, review responses and ASO tips.</div>
+        </div>
+        <button class="btn btn-primary" onclick="showPage('ai-analyzer',document.querySelector('[onclick*=ai-analyzer]'))">Open AI Analyzer →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI ANALYZER -->
+  <div id="ai-analyzer" class="page">
+    <div class="page-header">
+      <h2>🤖 AI ASO Analyzer</h2>
+      <p>Powered by Claude AI — get real keyword research, competitor analysis & ASO advice</p>
+    </div>
+
+    <div class="analyzer-wrap">
+      <div class="card mb-16">
+        <div class="ai-badge">✨ Claude AI Connected</div>
+        <div class="section-title">What do you want to analyze?</div>
+        <div class="input-group">
+          <select id="aiTask">
+            <option value="keywords">🔍 Keyword Research</option>
+            <option value="description">📝 Optimize App Description</option>
+            <option value="competitor">⚔️ Competitor Analysis</option>
+            <option value="reviews">💬 Generate Review Responses</option>
+            <option value="title">✏️ Optimize App Title & Subtitle</option>
+            <option value="aso">📊 Full ASO Audit</option>
+          </select>
+          <textarea id="aiInput" rows="3" placeholder="Describe your app or paste your app details here...
+Example: My app is a photo editor with AI filters, background remover, and portrait mode. Target audience: photographers and social media users."></textarea>
+          <button class="btn btn-primary" id="aiBtn" onclick="runAI()">🤖 Analyze with AI</button>
+        </div>
+        <div class="quick-btns">
+          <span class="text-sm text-muted" style="align-self:center">Quick:</span>
+          <button class="quick-btn" onclick="quickAsk('keyword research for a fitness tracking app with workout plans and calorie counter')">Fitness App Keywords</button>
+          <button class="quick-btn" onclick="quickAsk('keyword research for a food delivery app in Pakistan')">Food Delivery App</button>
+          <button class="quick-btn" onclick="quickAsk('optimize title and subtitle for a photo editor app with AI features')">Photo Editor Title</button>
+          <button class="quick-btn" onclick="quickAsk('generate 5 professional responses to negative reviews about app crashes')">Review Responses</button>
+          <button class="quick-btn" onclick="quickAsk('full ASO audit for an educational app teaching kids to read')">Kids Education Audit</button>
+        </div>
+      </div>
+
+      <div id="chatHistory" class="chat-history"></div>
+    </div>
+  </div>
+
+  <!-- KEYWORDS -->
+  <div id="keywords" class="page">
+    <div class="page-header"><h2>Keyword Research</h2><p>AI-powered keyword discovery and tracking</p></div>
+    <div class="card mb-16">
+      <div class="ai-badge">✨ AI Powered</div>
+      <div class="search-bar">
+        <input type="text" id="kwInput" placeholder="Enter your app category or niche (e.g. fitness tracker, photo editor)..." onkeydown="if(event.key==='Enter')searchKwAI()">
+        <button class="btn btn-primary" onclick="searchKwAI()">🤖 AI Search</button>
+      </div>
+      <div id="kwLoading" style="display:none" class="typing"><div class="typing-dots"><span></span><span></span><span></span></div> AI is researching keywords...</div>
+    </div>
+    <div id="kwAIResult"></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Keyword</th><th>Est. Volume</th><th>Difficulty</th><th>Your Rank</th><th>Action</th></tr></thead>
+        <tbody id="kwBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- COMPETITORS -->
+  <div id="competitors" class="page">
+    <div class="page-header"><h2>Competitor Analysis</h2><p>AI-powered competitor intelligence</p></div>
+    <div class="card mb-16">
+      <div class="ai-badge">✨ AI Powered</div>
+      <div class="search-bar">
+        <input type="text" id="compInput" placeholder="Enter competitor app name or your app category...">
+        <button class="btn btn-primary" onclick="analyzeCompAI()">🤖 Analyze</button>
+      </div>
+      <div id="compLoading" style="display:none" class="typing"><div class="typing-dots"><span></span><span></span><span></span></div> AI is analyzing competitors...</div>
+    </div>
+    <div id="compAIResult"></div>
+    <div class="section-title">Tracked Competitors</div>
+    <div id="compList">
+      <div class="comp-card"><div class="app-icon" style="background:#1a73e8">📷</div><div style="flex:1"><div class="flex-between"><span class="fw-600">Snapseed</span><span class="badge badge-red">Rank #2</span></div><div class="text-sm text-muted mt-16">4.8⭐ · 312 keywords · 5.2M downloads</div></div></div>
+      <div class="comp-card"><div class="app-icon" style="background:#000">🎨</div><div style="flex:1"><div class="flex-between"><span class="fw-600">VSCO</span><span class="badge badge-yellow">Rank #5</span></div><div class="text-sm text-muted mt-16">4.6⭐ · 284 keywords · 3.8M downloads</div></div></div>
+      <div class="comp-card"><div class="app-icon" style="background:#e91e63">🖼️</div><div style="flex:1"><div class="flex-between"><span class="fw-600">PicsArt</span><span class="badge badge-red">Rank #1</span></div><div class="text-sm text-muted mt-16">4.5⭐ · 421 keywords · 8.1M downloads</div></div></div>
+    </div>
+  </div>
+
+  <!-- REVIEWS -->
+  <div id="reviews" class="page">
+    <div class="page-header"><h2>Review Management</h2><p>AI-powered review responses</p></div>
+    <div class="grid-4 mb-16">
+      <div class="stat-card"><div class="stat-label">Total Reviews</div><div class="stat-value">12,847</div><div class="stat-change up">↑ 342 this week</div></div>
+      <div class="stat-card"><div class="stat-label">Avg Rating</div><div class="stat-value text-warning">4.6 ⭐</div></div>
+      <div class="stat-card"><div class="stat-label">Responded</div><div class="stat-value text-danger">45%</div><div class="stat-change down">↓ Below target</div></div>
+      <div class="stat-card"><div class="stat-label">Positive</div><div class="stat-value text-success">78%</div></div>
+    </div>
+    <div class="card mb-16">
+      <div class="ai-badge">✨ AI Review Responder</div>
+      <div class="section-title">Generate AI Response</div>
+      <textarea id="reviewInput" rows="3" placeholder="Paste the user review here..."></textarea>
+      <div style="display:flex;gap:10px;margin-top:10px">
+        <select id="reviewTone" style="width:auto">
+          <option>Professional</option>
+          <option>Friendly</option>
+          <option>Apologetic</option>
+          <option>Grateful</option>
+        </select>
+        <button class="btn btn-primary" onclick="generateReviewResponse()">🤖 Generate Response</button>
+      </div>
+      <div id="reviewLoading" style="display:none" class="typing"><div class="typing-dots"><span></span><span></span><span></span></div> Generating response...</div>
+      <div id="reviewAIResult"></div>
+    </div>
+    <div class="section-title">Recent Reviews</div>
+    <div id="reviewList"></div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div id="analytics" class="page">
+    <div class="page-header"><h2>Analytics</h2><p>Performance insights</p></div>
+    <div class="grid-4 mb-16">
+      <div class="stat-card"><div class="stat-label">Impressions</div><div class="stat-value">1.2M</div><div class="stat-change up">↑ 8.3%</div></div>
+      <div class="stat-card"><div class="stat-label">Page Views</div><div class="stat-value">284K</div><div class="stat-change up">↑ 5.1%</div></div>
+      <div class="stat-card"><div class="stat-label">Installs</div><div class="stat-value">48.3K</div><div class="stat-change up">↑ 12.4%</div></div>
+      <div class="stat-card"><div class="stat-label">Conversion</div><div class="stat-value">17%</div><div class="stat-change down">↓ 0.8%</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">Monthly Downloads</div>
+        <div class="bar-chart mt-16" id="moChart"></div>
+        <div class="bar-labels mt-16" id="moLabels"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Traffic Sources</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px">
+          <div><div class="flex-between text-sm mb-16"><span>Search</span><span class="fw-600">52%</span></div><div class="progress"><div class="progress-fill" style="width:52%;background:var(--accent)"></div></div></div>
+          <div><div class="flex-between text-sm mb-16"><span>Browse</span><span class="fw-600">24%</span></div><div class="progress"><div class="progress-fill" style="width:24%;background:var(--accent2)"></div></div></div>
+          <div><div class="flex-between text-sm mb-16"><span>Referral</span><span class="fw-600">14%</span></div><div class="progress"><div class="progress-fill" style="width:14%;background:var(--warning)"></div></div></div>
+          <div><div class="flex-between text-sm mb-16"><span>App Referral</span><span class="fw-600">7%</span></div><div class="progress"><div class="progress-fill" style="width:7%;background:var(--success)"></div></div></div>
+          <div><div class="flex-between text-sm mb-16"><span>Web Referral</span><span class="fw-600">3%</span></div><div class="progress"><div class="progress-fill" style="width:3%;background:var(--danger)"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// Navigation
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(el) el.classList.add('active');
+}
+
+// Charts
+const dlData=[1800,2100,1950,2400,2800,3100,2700,3400,3900,4200,4800,5200,4600,5800,6100,5500,6800,7200,6500,7900,8100,7400,8600,9100,8400,9800,10200,9600,11000,11800];
+const dlChart=document.getElementById('dlChart');
+dlData.forEach((v,i)=>{const b=document.createElement('div');b.className='bar';b.style.cssText=`height:${Math.round(v/Math.max(...dlData)*100)}%;background:${i>=25?'var(--accent)':'rgba(108,99,255,0.4)'}`;dlChart.appendChild(b);});
+const dlLEl=document.getElementById('dlLabels');
+dlData.forEach((_,i)=>{const l=document.createElement('div');l.className='bar-label-item';l.textContent=i%5===0?`${i+1}`:'';dlLEl.appendChild(l);});
+
+const moData=[28000,31000,26000,34000,38000,42000,39000,45000,48000,51000,46000,54000];
+const moLabels=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const moChart=document.getElementById('moChart');
+moData.forEach((v,i)=>{const b=document.createElement('div');b.className='bar';b.style.cssText=`height:${Math.round(v/Math.max(...moData)*100)}%;background:${i===8?'var(--accent)':'rgba(78,205,196,0.5)'}`;b.title=`${moLabels[i]}: ${v.toLocaleString()}`;moChart.appendChild(b);});
+const moLEl=document.getElementById('moLabels');
+moLabels.forEach(l=>{const d=document.createElement('div');d.className='bar-label-item';d.textContent=l;moLEl.appendChild(d);});
+
+// Reviews static
+const revData=[
+  {user:'Sarah M.',stars:5,text:'Absolutely love this app! The filters are stunning and so intuitive.',date:'2h ago',country:'🇺🇸',responded:false},
+  {user:'Ahmed K.',stars:5,text:'Best app for editing photos. Very fast and easy to use.',date:'5h ago',country:'🇵🇰',responded:true},
+  {user:'James R.',stars:2,text:'App keeps crashing when I try to export in high resolution. Please fix!',date:'8h ago',country:'🇬🇧',responded:false},
+  {user:'Priya S.',stars:4,text:'Really good overall. AI enhancements are amazing. Wish free version had more filters.',date:'1d ago',country:'🇮🇳',responded:false},
+];
+const revList=document.getElementById('reviewList');
+revData.forEach(r=>{
+  const stars='★'.repeat(r.stars)+'☆'.repeat(5-r.stars);
+  const sc=r.stars>=4?'var(--success)':r.stars===3?'var(--warning)':'var(--danger)';
+  revList.innerHTML+=`<div class="review-card">
+    <div class="flex-between mb-16">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-weight:600">${r.user[0]}</div>
+        <div><div class="fw-600 text-sm">${r.user} ${r.country}</div><div style="color:${sc};font-size:13px">${stars}</div></div>
+      </div>
+      <span class="text-sm text-muted">${r.date}</span>
+    </div>
+    <div class="text-sm" style="line-height:1.6">"${r.text}"</div>
+    <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+      <span class="badge ${r.responded?'badge-green':'badge-red'}">${r.responded?'✓ Responded':'Needs Response'}</span>
+      ${!r.responded?`<button class="btn btn-sm btn-outline" onclick="autoFillReview('${r.text.replace(/'/g,"\\'")}')">🤖 AI Reply</button>`:''}
+    </div>
+  </div>`;
+});
+
+function autoFillReview(text) {
+  showPage('reviews', document.querySelector('[onclick*=reviews]'));
+  document.getElementById('reviewInput').value = text;
+  document.getElementById('reviewInput').scrollIntoView({behavior:'smooth'});
+}
+
+// ============================================
+// CLAUDE AI INTEGRATION
+// ============================================
+async function callClaude(prompt, systemPrompt) {
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1000,
+      system: systemPrompt || "You are an expert App Store Optimization (ASO) specialist. Give practical, specific, actionable advice. Use markdown formatting with headers and bullet points. Be concise but comprehensive.",
+      messages: [{ role: "user", content: prompt }]
+    })
+  });
+  const data = await response.json();
+  if(data.error) throw new Error(data.error.message);
+  return data.content[0].text;
+}
+
+function formatAI(text) {
+  return text
+    .replace(/### (.*)/g, '<h3>$1</h3>')
+    .replace(/## (.*)/g, '<h3>$1</h3>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/^- (.*)/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/gs, m => `<ul>${m}</ul>`)
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+}
+
+// Main AI Analyzer
+async function runAI() {
+  const task = document.getElementById('aiTask').value;
+  const input = document.getElementById('aiInput').value.trim();
+  if(!input) { alert('Please describe your app first!'); return; }
+
+  const prompts = {
+    keywords: `Do keyword research for this app: "${input}". Provide: 1) 10 high-value keywords with estimated search volume (high/medium/low) and difficulty (easy/medium/hard) 2) Long-tail keyword opportunities 3) Seasonal keywords 4) Competitor keywords to target`,
+    description: `Optimize the app store description for: "${input}". Provide: 1) Optimized description (max 4000 chars) with keywords naturally integrated 2) Key features list 3) Call to action 4) Keywords used`,
+    competitor: `Analyze the competitive landscape for: "${input}". Provide: 1) Top 5 likely competitors and their strengths 2) Market gaps and opportunities 3) Differentiation strategies 4) Keywords competitors likely rank for`,
+    reviews: `Generate 5 professional review responses for this app/situation: "${input}". Include responses for: positive reviews, negative reviews about bugs, feature requests, and rating complaints.`,
+    title: `Create optimized app title and subtitle for: "${input}". Provide: 3 title options (max 30 chars each), 3 subtitle options (max 30 chars each), and explanation of keyword strategy used.`,
+    aso: `Do a full ASO audit strategy for: "${input}". Cover: title optimization, keyword strategy, description optimization, screenshot recommendations, rating improvement strategy, and 30-day action plan.`
+  };
+
+  const btn = document.getElementById('aiBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Analyzing...';
+
+  const chatHistory = document.getElementById('chatHistory');
+  const taskLabels = {keywords:'Keyword Research',description:'Description Optimizer',competitor:'Competitor Analysis',reviews:'Review Responses',title:'Title Optimizer',aso:'Full ASO Audit'};
+
+  chatHistory.innerHTML += `<div><div class="msg-label">You</div><div class="msg-user">🔍 ${taskLabels[task]}: ${input.substring(0,100)}${input.length>100?'...':''}</div></div>`;
+
+  const loadingDiv = document.createElement('div');
+  loadingDiv.innerHTML = `<div class="msg-label">Claude AI</div><div class="typing"><div class="typing-dots"><span></span><span></span><span></span></div> Analyzing with AI...</div>`;
+  chatHistory.appendChild(loadingDiv);
+  chatHistory.scrollIntoView({behavior:'smooth',block:'end'});
+
+  try {
+    const result = await callClaude(prompts[task]);
+    loadingDiv.innerHTML = `<div class="msg-label">🤖 Claude AI</div><div class="msg-ai">${formatAI(result)}</div>`;
+  } catch(e) {
+    loadingDiv.innerHTML = `<div class="msg-label">Error</div><div class="msg-ai" style="border-color:var(--danger)">❌ ${e.message}<br><br>Make sure you're using this through Claude.ai artifacts which handles the API connection.</div>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🤖 Analyze with AI';
+  chatHistory.scrollIntoView({behavior:'smooth',block:'end'});
+}
+
+function quickAsk(text) {
+  document.getElementById('aiInput').value = text;
+  const task = text.includes('keyword') ? 'keywords' : text.includes('title') ? 'title' : text.includes('response') ? 'reviews' : text.includes('audit') ? 'aso' : 'keywords';
+  document.getElementById('aiTask').value = task;
+  runAI();
+}
+
+// AI Keyword Search
+async function searchKwAI() {
+  const q = document.getElementById('kwInput').value.trim();
+  if(!q) { alert('Enter your app niche!'); return; }
+
+  document.getElementById('kwLoading').style.display='flex';
+  document.getElementById('kwAIResult').innerHTML='';
+
+  try {
+    const result = await callClaude(
+      `For a "${q}" app, give me exactly 8 keywords in this JSON format only, no other text:
+      [{"keyword":"word","volume":"High/Medium/Low","difficulty":"Easy/Medium/Hard","rank":"#?? or Not ranking","opportunity":"High/Medium/Low"}]`,
+      "You are an ASO expert. Return ONLY valid JSON arrays, no markdown, no explanation."
+    );
+    const clean = result.replace(/```json|```/g,'').trim();
+    const keywords = JSON.parse(clean);
+
+    document.getElementById('kwAIResult').innerHTML = `<div class="card mb-16" style="border-color:rgba(108,99,255,0.3)"><div class="ai-badge">✨ AI Generated Keywords for "${q}"</div><div class="text-sm text-muted">Based on ASO best practices and market analysis</div></div>`;
+
+    const tbody = document.getElementById('kwBody');
+    tbody.innerHTML = keywords.map(k => {
+      const dc = k.difficulty==='Easy'?'var(--success)':k.difficulty==='Medium'?'var(--warning)':'var(--danger)';
+      const oc = k.opportunity==='High'?'badge-green':k.opportunity==='Medium'?'badge-yellow':'badge-red';
+      return `<tr>
+        <td class="fw-600">${k.keyword}</td>
+        <td><span class="badge ${k.volume==='High'?'badge-green':k.volume==='Medium'?'badge-yellow':'badge-purple'}">${k.volume}</span></td>
+        <td><span style="color:${dc}">${k.difficulty}</span></td>
+        <td>${k.rank}</td>
+        <td><span class="badge ${oc}">${k.opportunity}</span></td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    document.getElementById('kwAIResult').innerHTML = `<div class="card mb-16" style="border-color:var(--danger)">❌ Error: ${e.message}</div>`;
+  }
+  document.getElementById('kwLoading').style.display='none';
+}
+
+// AI Competitor Analysis
+async function analyzeCompAI() {
+  const q = document.getElementById('compInput').value.trim();
+  if(!q) { alert('Enter competitor name or app category!'); return; }
+
+  document.getElementById('compLoading').style.display='flex';
+  document.getElementById('compAIResult').innerHTML='';
+
+  try {
+    const result = await callClaude(`Analyze the competitive ASO landscape for: "${q}". Give specific competitor names, their keyword strategies, what they do well in ASO, and opportunities to beat them. Be specific and actionable.`);
+    document.getElementById('compAIResult').innerHTML = `<div class="card mb-16" style="border-color:rgba(108,99,255,0.3)"><div class="ai-badge">✨ AI Competitor Analysis</div><div class="msg-ai" style="border:none;padding:0;background:none">${formatAI(result)}</div></div>`;
+  } catch(e) {
+    document.getElementById('compAIResult').innerHTML = `<div class="card mb-16" style="border-color:var(--danger)">❌ ${e.message}</div>`;
+  }
+  document.getElementById('compLoading').style.display='none';
+}
+
+// AI Review Response
+async function generateReviewResponse() {
+  const review = document.getElementById('reviewInput').value.trim();
+  const tone = document.getElementById('reviewTone').value;
+  if(!review) { alert('Paste a review first!'); return; }
+
+  document.getElementById('reviewLoading').style.display='flex';
+  document.getElementById('reviewAIResult').innerHTML='';
+
+  try {
+    const result = await callClaude(
+      `Generate a ${tone.toLowerCase()} app store response to this user review: "${review}". 
+      The response should be: under 150 words, acknowledge their feedback, offer a solution if it's negative, thank them if positive, and end with a call to contact support. Write only the response, no explanation.`,
+      "You are an expert app store community manager. Write natural, human-sounding responses."
+    );
+    document.getElementById('reviewAIResult').innerHTML = `
+      <div class="ai-response mt-16">
+        <div class="ai-badge">✨ AI Generated Response (${tone})</div>
+        <p style="line-height:1.7">${result}</p>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button class="btn btn-sm btn-primary" onclick="navigator.clipboard.writeText(document.querySelector('.ai-response p').textContent);this.textContent='✅ Copied!'">📋 Copy</button>
+          <button class="btn btn-sm btn-outline" onclick="generateReviewResponse()">🔄 Regenerate</button>
+        </div>
+      </div>`;
+  } catch(e) {
+    document.getElementById('reviewAIResult').innerHTML = `<div class="ai-response mt-16" style="border-color:var(--danger)">❌ ${e.message}</div>`;
+  }
+  document.getElementById('reviewLoading').style.display='none';
+}
+
+// Static keyword table default
+document.getElementById('kwBody').innerHTML = [
+  {kw:'photo editor',vol:'High',diff:'Hard',rank:'#3',opp:'Medium'},
+  {kw:'image enhancer',vol:'Medium',diff:'Medium',rank:'#7',opp:'High'},
+  {kw:'ai photo filter',vol:'High',diff:'Hard',rank:'#15',opp:'Medium'},
+  {kw:'background remover',vol:'Medium',diff:'Medium',rank:'#9',opp:'High'},
+].map(k=>`<tr><td class="fw-600">${k.kw}</td><td><span class="badge badge-green">${k.vol}</span></td><td>${k.diff}</td><td><span class="badge ${parseInt(k.rank.slice(1))<10?'badge-green':'badge-yellow'}">${k.rank}</span></td><td><span class="badge badge-green">${k.opp}</span></td></tr>`).join('');
+</script>
+</body>
+</html>
