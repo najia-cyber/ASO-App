@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASO Platform - App Store Optimization</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0f1117;
+    --bg2: #1a1d27;
+    --bg3: #22263a;
+    --border: #2e3250;
+    --text: #e8eaf6;
+    --muted: #8b90b8;
+    --accent: #6c63ff;
+    --accent2: #4ecdc4;
+    --success: #56cc9d;
+    --warning: #f7b731;
+    --danger: #fc5c65;
+    --card: #1e2235;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; }
+
+  /* Sidebar */
+  .sidebar { width: 220px; background: var(--bg2); border-right: 1px solid var(--border); padding: 24px 0; display: flex; flex-direction: column; position: fixed; height: 100vh; }
+  .logo { padding: 0 20px 24px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .logo h1 { font-size: 20px; font-weight: 700; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .logo p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 20px; cursor: pointer; color: var(--muted); font-size: 14px; transition: all 0.2s; border-left: 3px solid transparent; }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: rgba(108,99,255,0.1); color: var(--accent); border-left-color: var(--accent); }
+  .nav-icon { font-size: 18px; width: 20px; text-align: center; }
+  .sidebar-footer { margin-top: auto; padding: 16px 20px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+
+  /* Main */
+  .main { margin-left: 220px; flex: 1; padding: 28px; min-height: 100vh; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .page-header { margin-bottom: 24px; }
+  .page-header h2 { font-size: 22px; font-weight: 600; }
+  .page-header p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+  /* Cards */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .card-title { font-size: 13px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Grid */
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+
+  /* Stat card */
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .stat-value { font-size: 28px; font-weight: 700; margin: 8px 0 4px; }
+  .stat-change { font-size: 12px; }
+  .stat-change.up { color: var(--success); }
+  .stat-change.down { color: var(--danger); }
+  .stat-label { font-size: 13px; color: var(--muted); }
+
+  /* Inputs */
+  .search-bar { display: flex; gap: 10px; margin-bottom: 20px; }
+  input[type="text"], select { background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 14px; outline: none; width: 100%; }
+  input[type="text"]:focus, select:focus { border-color: var(--accent); }
+  .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #5a52e0; }
+  .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 6px; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Table */
+  .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { background: var(--bg3); padding: 12px 16px; text-align: left; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
+  td { padding: 13px 16px; border-top: 1px solid var(--border); }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* Badges */
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-green { background: rgba(86,204,157,0.15); color: var(--success); }
+  .badge-red { background: rgba(252,92,101,0.15); color: var(--danger); }
+  .badge-yellow { background: rgba(247,183,49,0.15); color: var(--warning); }
+  .badge-purple { background: rgba(108,99,255,0.15); color: var(--accent); }
+
+  /* Score ring */
+  .score-ring { position: relative; width: 80px; height: 80px; }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring .score-num { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 20px; font-weight: 700; }
+
+  /* Chart bars */
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 120px; padding: 0 4px; }
+  .bar { flex: 1; border-radius: 4px 4px 0 0; transition: opacity 0.2s; cursor: pointer; position: relative; min-width: 20px; }
+  .bar:hover { opacity: 0.8; }
+  .bar-label { text-align: center; font-size: 10px; color: var(--muted); margin-top: 4px; }
+  .bar-labels { display: flex; gap: 6px; padding: 0 4px; }
+  .bar-label-item { flex: 1; text-align: center; font-size: 10px; color: var(--muted); min-width: 20px; }
+
+  /* Reviews */
+  .review-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+  .review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .review-stars { color: var(--warning); font-size: 14px; }
+  .review-text { font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .review-meta { font-size: 11px; color: var(--muted); margin-top: 8px; }
+
+  /* Keyword difficulty bar */
+  .diff-bar { height: 6px; border-radius: 3px; background: var(--bg3); overflow: hidden; margin-top: 4px; }
+  .diff-fill { height: 100%; border-radius: 3px; }
+
+  /* Competitor card */
+  .comp-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: flex; gap: 14px; align-items: center; margin-bottom: 12px; }
+  .app-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+
+  /* Mini sparkline */
+  .sparkline { display: flex; align-items: flex-end; gap: 2px; height: 30px; }
+  .spark-bar { width: 4px; border-radius: 2px 2px 0 0; }
+
+  /* Tab */
+  .tabs { display: flex; gap: 4px; background: var(--bg3); border-radius: 10px; padding: 4px; margin-bottom: 20px; width: fit-content; }
+  .tab { padding: 7px 16px; border-radius: 7px; cursor: pointer; font-size: 13px; color: var(--muted); transition: all 0.2s; }
+  .tab.active { background: var(--card); color: var(--text); }
+
+  /* Progress */
+  .progress { height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Loading spinner */
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Sentiment donut */
+  .donut-wrap { position: relative; width: 100px; height: 100px; margin: 0 auto 12px; }
+  .donut-wrap .center-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+
+  .section-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+  .flex { display: flex; }
+  .flex-between { display: flex; justify-content: space-between; align-items: center; }
+  .gap-8 { gap: 8px; }
+  .gap-12 { gap: 12px; }
+  .mt-16 { margin-top: 16px; }
+  .mt-24 { margin-top: 24px; }
+  .mb-16 { margin-bottom: 16px; }
+  .text-sm { font-size: 13px; }
+  .text-muted { color: var(--muted); }
+  .text-success { color: var(--success); }
+  .text-danger { color: var(--danger); }
+  .text-warning { color: var(--warning); }
+  .text-accent { color: var(--accent); }
+  .fw-600 { font-weight: 600; }
+
+  @media (max-width: 900px) {
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: repeat(2, 1fr); }
+    .sidebar { width: 60px; }
+    .sidebar .nav-item span, .logo p, .logo h1, .sidebar-footer { display: none; }
+    .main { margin-left: 60px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="logo">
+    <h1>ASO Pro</h1>
+    <p>App Store Optimization</p>
+  </div>
+  <div class="nav-item active" onclick="showPage('dashboard', this)">
+    <span class="nav-icon">📊</span><span>Dashboard</span>
+  </div>
+  <div class="nav-item" onclick="showPage('keywords', this)">
+    <span class="nav-icon">🔍</span><span>Keywords</span>
+  </div>
+  <div class="nav-item" onclick="showPage('competitors', this)">
+    <span class="nav-icon">⚔️</span><span>Competitors</span>
+  </div>
+  <div class="nav-item" onclick="showPage('reviews', this)">
+    <span class="nav-icon">⭐</span><span>Reviews</span>
+  </div>
+  <div class="nav-item" onclick="showPage('analytics', this)">
+    <span class="nav-icon">📈</span><span>Analytics</span>
+  </div>
+  <div class="sidebar-footer">v2.4.1 · Free Plan</div>
+</nav>
+
+<!-- Main Content -->
+<main class="main">
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="page active">
+    <div class="page-header">
+      <h2>Dashboard</h2>
+      <p>Overview of your app's performance · Last updated: just now</p>
+    </div>
+
+    <div class="grid-4">
+      <div class="stat-card">
+        <div class="stat-label">App Store Rank</div>
+        <div class="stat-value text-accent">#14</div>
+        <div class="stat-change up">↑ 6 positions this week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Downloads (30d)</div>
+        <div class="stat-value">48,290</div>
+        <div class="stat-change up">↑ 12.4% vs last month</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Avg Rating</div>
+        <div class="stat-value text-warning">4.6 ⭐</div>
+        <div class="stat-change up">↑ 0.2 this month</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Keywords Ranked</div>
+        <div class="stat-value">127</div>
+        <div class="stat-change up">↑ 18 new this week</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="flex-between mb-16">
+          <div class="section-title">Download Trend</div>
+          <select style="width:auto;padding:4px 10px;font-size:12px">
+            <option>Last 7 days</option>
+            <option selected>Last 30 days</option>
+            <option>Last 90 days</option>
+          </select>
+        </div>
+        <div class="bar-chart" id="downloadChart"></div>
+        <div class="bar-labels" id="downloadLabels"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title mb-16">Top Performing Keywords</div>
+        <table style="font-size:13px">
+          <tr><th>Keyword</th><th>Rank</th><th>Volume</th><th>Change</th></tr>
+          <tr><td>photo editor</td><td><span class="badge badge-green">#3</span></td><td>98K</td><td class="text-success">↑2</td></tr>
+          <tr><td>image enhancer</td><td><span class="badge badge-green">#7</span></td><td>54K</td><td class="text-success">↑5</td></tr>
+          <tr><td>ai photo</td><td><span class="badge badge-yellow">#15</span></td><td>120K</td><td class="text-danger">↓3</td></tr>
+          <tr><td>background remover</td><td><span class="badge badge-green">#9</span></td><td>67K</td><td class="text-success">↑1</td></tr>
+          <tr><td>selfie editor</td><td><span class="badge badge-yellow">#22</span></td><td>41K</td><td class="text-success">↑8</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="grid-3">
+      <div class="card">
+        <div class="section-title">ASO Score</div>
+        <div style="text-align:center;padding:10px 0">
+          <div style="font-size:52px;font-weight:700;color:var(--accent)">78</div>
+          <div class="text-muted text-sm">out of 100</div>
+          <div class="mt-16">
+            <div class="flex-between text-sm mb-16"><span class="text-muted">Title optimization</span><span class="text-success">92%</span></div>
+            <div class="progress mb-16"><div class="progress-fill" style="width:92%;background:var(--success)"></div></div>
+            <div class="flex-between text-sm mb-16"><span class="text-muted">Keyword density</span><span class="text-warning">68%</span></div>
+            <div class="progress mb-16"><div class="progress-fill" style="width:68%;background:var(--warning)"></div></div>
+            <div class="flex-between text-sm mb-16"><span class="text-muted">Screenshot quality</span><span class="text-success">85%</span></div>
+            <div class="progress mb-16"><div class="progress-fill" style="width:85%;background:var(--success)"></div></div>
+            <div class="flex-between text-sm"><span class="text-muted">Review response rate</span><span class="text-danger">45%</span></div>
+            <div class="progress"><div class="progress-fill" style="width:45%;background:var(--danger)"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Rating Distribution</div>
+        <div class="mt-16">
+          <div id="ratingBars"></div>
+        </div>
+        <div style="text-align:center;margin-top:16px">
+          <div style="font-size:36px;font-weight:700;color:var(--warning)">4.6</div>
+          <div class="text-muted text-sm">Based on 12,847 reviews</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Quick Actions</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+          <button class="btn btn-primary" onclick="showPage('keywords', document.querySelector('[onclick*=keywords]'))">🔍 Research Keywords</button>
+          <button class="btn btn-outline" onclick="showPage('competitors', document.querySelector('[onclick*=competitors]'))">⚔️ Analyze Competitors</button>
+          <button class="btn btn-outline" onclick="showPage('reviews', document.querySelector('[onclick*=reviews]'))">⭐ Manage Reviews</button>
+          <button class="btn btn-outline" onclick="showPage('analytics', document.querySelector('[onclick*=analytics]'))">📈 View Analytics</button>
+        </div>
+        <div style="margin-top:16px;padding:12px;background:rgba(108,99,255,0.1);border-radius:8px;border:1px solid rgba(108,99,255,0.2)">
+          <div class="text-sm fw-600 text-accent">💡 Tip of the day</div>
+          <div class="text-sm text-muted" style="margin-top:4px">Add long-tail keywords in your subtitle to rank for more searches with less competition.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KEYWORDS -->
+  <div id="keywords" class="page">
+    <div class="page-header">
+      <h2>Keyword Research</h2>
+      <p>Find, track and optimize keywords for your app</p>
+    </div>
+
+    <div class="card mb-16">
+      <div class="search-bar">
+        <input type="text" id="kwInput" placeholder="Search keywords (e.g. photo editor, fitness tracker...)" onkeydown="if(event.key==='Enter')searchKeywords()">
+        <select style="width:160px" id="storeSelect">
+          <option>App Store (iOS)</option>
+          <option>Google Play</option>
+          <option>Both</option>
+        </select>
+        <button class="btn btn-primary" onclick="searchKeywords()">Search</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchKwTab('research',this)">Research</div>
+      <div class="tab" onclick="switchKwTab('tracked',this)">Tracked (127)</div>
+      <div class="tab" onclick="switchKwTab('suggestions',this)">Suggestions</div>
+    </div>
+
+    <div id="kw-research">
+      <div class="table-wrap" id="kwResults">
+        <table>
+          <thead><tr><th>Keyword</th><th>Volume</th><th>Difficulty</th><th>Your Rank</th><th>Trend</th><th>Action</th></tr></thead>
+          <tbody id="kwBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="kw-tracked" style="display:none">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Keyword</th><th>Current Rank</th><th>Peak Rank</th><th>Volume</th><th>7d Change</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>photo editor</td><td><span class="badge badge-green">#3</span></td><td>#2</td><td>98K</td><td class="text-success">↑2</td><td><span class="badge badge-green">Ranking</span></td></tr>
+            <tr><td>image enhancer</td><td><span class="badge badge-green">#7</span></td><td>#5</td><td>54K</td><td class="text-success">↑5</td><td><span class="badge badge-green">Ranking</span></td></tr>
+            <tr><td>ai photo filter</td><td><span class="badge badge-yellow">#15</span></td><td>#11</td><td>120K</td><td class="text-danger">↓3</td><td><span class="badge badge-yellow">Tracking</span></td></tr>
+            <tr><td>background remover</td><td><span class="badge badge-green">#9</span></td><td>#9</td><td>67K</td><td class="text-success">↑1</td><td><span class="badge badge-green">Ranking</span></td></tr>
+            <tr><td>selfie editor</td><td><span class="badge badge-yellow">#22</span></td><td>#18</td><td>41K</td><td class="text-success">↑8</td><td><span class="badge badge-yellow">Tracking</span></td></tr>
+            <tr><td>portrait mode</td><td><span class="badge badge-red">#48</span></td><td>#31</td><td>88K</td><td class="text-danger">↓12</td><td><span class="badge badge-red">Dropped</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="kw-suggestions" style="display:none">
+      <div class="grid-3">
+        <div class="card"><div class="section-title">🔥 Trending Now</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+            <div class="flex-between text-sm"><span>ai art generator</span><span class="text-success">↑340%</span></div>
+            <div class="flex-between text-sm"><span>photo to cartoon</span><span class="text-success">↑180%</span></div>
+            <div class="flex-between text-sm"><span>face swap app</span><span class="text-success">↑220%</span></div>
+            <div class="flex-between text-sm"><span>hd photo enhancer</span><span class="text-success">↑95%</span></div>
+            <div class="flex-between text-sm"><span>remove background free</span><span class="text-success">↑67%</span></div>
+          </div>
+        </div>
+        <div class="card"><div class="section-title">💎 Low Competition</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+            <div class="flex-between text-sm"><span>photo color grading</span><span class="badge badge-green">Easy</span></div>
+            <div class="flex-between text-sm"><span>vintage photo editor</span><span class="badge badge-green">Easy</span></div>
+            <div class="flex-between text-sm"><span>photo collage maker hd</span><span class="badge badge-yellow">Medium</span></div>
+            <div class="flex-between text-sm"><span>blur background photo</span><span class="badge badge-green">Easy</span></div>
+            <div class="flex-between text-sm"><span>skin tone editor</span><span class="badge badge-green">Easy</span></div>
+          </div>
+        </div>
+        <div class="card"><div class="section-title">🎯 Quick Wins</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+            <div class="flex-between text-sm"><span>photo enhancer free</span><span class="text-accent">#18 → #5?</span></div>
+            <div class="flex-between text-sm"><span>best photo editor</span><span class="text-accent">#31 → #10?</span></div>
+            <div class="flex-between text-sm"><span>edit photos easily</span><span class="text-accent">#24 → #8?</span></div>
+            <div class="flex-between text-sm"><span>portrait editor</span><span class="text-accent">#19 → #6?</span></div>
+            <div class="flex-between text-sm"><span>photo touch up</span><span class="text-accent">#27 → #9?</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPETITORS -->
+  <div id="competitors" class="page">
+    <div class="page-header">
+      <h2>Competitor Analysis</h2>
+      <p>Monitor and benchmark against your top competitors</p>
+    </div>
+
+    <div class="search-bar mb-16">
+      <input type="text" placeholder="Search competitor app name or ID...">
+      <button class="btn btn-primary" onclick="addCompetitor()">+ Add Competitor</button>
+    </div>
+
+    <div class="grid-2 mb-16">
+      <div class="card">
+        <div class="section-title">Ranking Comparison</div>
+        <div style="margin-top:12px">
+          <div style="display:flex;flex-direction:column;gap:12px" id="rankComp"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">Rating Comparison</div>
+        <div id="ratingComp" style="margin-top:12px;display:flex;flex-direction:column;gap:12px"></div>
+      </div>
+    </div>
+
+    <div class="section-title">Tracked Competitors</div>
+    <div id="compList"></div>
+
+    <div class="card mt-24">
+      <div class="section-title">Keyword Gap Analysis</div>
+      <p class="text-muted text-sm mb-16">Keywords your competitors rank for that you don't</p>
+      <div class="table-wrap" style="border:none">
+        <table>
+          <thead><tr><th>Keyword</th><th>Competitor</th><th>Their Rank</th><th>Volume</th><th>Opportunity</th></tr></thead>
+          <tbody>
+            <tr><td>photo magic</td><td>Snapseed</td><td>#2</td><td>32K</td><td><span class="badge badge-green">High</span></td></tr>
+            <tr><td>pro camera filter</td><td>VSCO</td><td>#4</td><td>58K</td><td><span class="badge badge-green">High</span></td></tr>
+            <tr><td>edit video photo</td><td>PicsArt</td><td>#6</td><td>74K</td><td><span class="badge badge-yellow">Medium</span></td></tr>
+            <tr><td>aesthetic photo</td><td>Lightroom</td><td>#3</td><td>91K</td><td><span class="badge badge-green">High</span></td></tr>
+            <tr><td>photo to sketch</td><td>Snapseed</td><td>#8</td><td>44K</td><td><span class="badge badge-yellow">Medium</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVIEWS -->
+  <div id="reviews" class="page">
+    <div class="page-header">
+      <h2>Review Management</h2>
+      <p>Monitor, analyze and respond to user reviews</p>
+    </div>
+
+    <div class="grid-4 mb-16">
+      <div class="stat-card">
+        <div class="stat-label">Total Reviews</div>
+        <div class="stat-value">12,847</div>
+        <div class="stat-change up">↑ 342 this week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Avg Rating</div>
+        <div class="stat-value text-warning">4.6 ⭐</div>
+        <div class="stat-change up">↑ 0.2 from last month</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Responded</div>
+        <div class="stat-value text-danger">45%</div>
+        <div class="stat-change down">↓ Below 80% target</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Sentiment</div>
+        <div class="stat-value text-success">78%</div>
+        <div class="stat-change up">↑ Positive</div>
+      </div>
+    </div>
+
+    <div class="grid-2 mb-16">
+      <div class="card">
+        <div class="section-title">Sentiment Breakdown</div>
+        <div style="display:flex;gap:20px;align-items:center;margin-top:12px">
+          <div style="flex:1">
+            <div class="flex-between text-sm mb-16"><span>😊 Positive</span><span class="text-success fw-600">78%</span></div>
+            <div class="progress mb-16"><div class="progress-fill" style="width:78%;background:var(--success)"></div></div>
+            <div class="flex-between text-sm mb-16"><span>😐 Neutral</span><span class="text-warning fw-600">14%</span></div>
+            <div class="progress mb-16"><div class="progress-fill" style="width:14%;background:var(--warning)"></div></div>
+            <div class="flex-between text-sm mb-16"><span>😠 Negative</span><span class="text-danger fw-600">8%</span></div>
+            <div class="progress"><div class="progress-fill" style="width:8%;background:var(--danger)"></div></div>
+          </div>
+        </div>
+        <div class="mt-16">
+          <div class="section-title" style="font-size:13px">Top Mentioned Topics</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+            <span class="badge badge-green">easy to use (2.1K)</span>
+            <span class="badge badge-green">great filters (1.8K)</span>
+            <span class="badge badge-yellow">slow loading (640)</span>
+            <span class="badge badge-green">love this app (1.2K)</span>
+            <span class="badge badge-red">crashes (420)</span>
+            <span class="badge badge-green">good quality (980)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Filter Reviews</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
+          <select><option>All Ratings</option><option>5 Stars</option><option>4 Stars</option><option>3 Stars</option><option>2 Stars</option><option>1 Star</option></select>
+          <select><option>All Sentiments</option><option>Positive</option><option>Neutral</option><option>Negative</option></select>
+          <select><option>All Versions</option><option>v2.4.1 (current)</option><option>v2.4.0</option><option>v2.3.5</option></select>
+          <select><option>All Countries</option><option>United States</option><option>United Kingdom</option><option>Pakistan</option><option>India</option></select>
+          <input type="text" placeholder="Search in review text...">
+          <button class="btn btn-primary">Apply Filters</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Recent Reviews</div>
+    <div id="reviewList"></div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div id="analytics" class="page">
+    <div class="page-header">
+      <h2>Analytics</h2>
+      <p>Deep dive into your app performance data</p>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchAnalTab('overview',this)">Overview</div>
+      <div class="tab" onclick="switchAnalTab('conversion',this)">Conversion</div>
+      <div class="tab" onclick="switchAnalTab('geographic',this)">Geographic</div>
+    </div>
+
+    <div id="anal-overview">
+      <div class="grid-4 mb-16">
+        <div class="stat-card"><div class="stat-label">Impressions</div><div class="stat-value">1.2M</div><div class="stat-change up">↑ 8.3%</div></div>
+        <div class="stat-card"><div class="stat-label">Page Views</div><div class="stat-value">284K</div><div class="stat-change up">↑ 5.1%</div></div>
+        <div class="stat-card"><div class="stat-label">Installs</div><div class="stat-value">48.3K</div><div class="stat-change up">↑ 12.4%</div></div>
+        <div class="stat-card"><div class="stat-label">Conversion Rate</div><div class="stat-value">17%</div><div class="stat-change down">↓ 0.8%</div></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="section-title">Monthly Downloads (2024)</div>
+          <div class="bar-chart mt-16" id="monthlyChart"></div>
+          <div class="bar-labels mt-16" id="monthlyLabels"></div>
+        </div>
+        <div class="card">
+          <div class="section-title">Traffic Sources</div>
+          <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px">
+            <div><div class="flex-between text-sm mb-16"><span>Search</span><span class="fw-600">52%</span></div><div class="progress"><div class="progress-fill" style="width:52%;background:var(--accent)"></div></div></div>
+            <div><div class="flex-between text-sm mb-16"><span>Browse</span><span class="fw-600">24%</span></div><div class="progress"><div class="progress-fill" style="width:24%;background:var(--accent2)"></div></div></div>
+            <div><div class="flex-between text-sm mb-16"><span>Referral</span><span class="fw-600">14%</span></div><div class="progress"><div class="progress-fill" style="width:14%;background:var(--warning)"></div></div></div>
+            <div><div class="flex-between text-sm mb-16"><span>App Referral</span><span class="fw-600">7%</span></div><div class="progress"><div class="progress-fill" style="width:7%;background:var(--success)"></div></div></div>
+            <div><div class="flex-between text-sm mb-16"><span>Web Referral</span><span class="fw-600">3%</span></div><div class="progress"><div class="progress-fill" style="width:3%;background:var(--danger)"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="anal-conversion" style="display:none">
+      <div class="grid-3">
+        <div class="card"><div class="section-title">Funnel</div>
+          <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+            <div style="background:var(--accent);border-radius:6px;padding:10px;text-align:center;font-size:13px">Impressions: 1.2M</div>
+            <div style="background:rgba(108,99,255,0.7);border-radius:6px;padding:10px;text-align:center;font-size:13px;margin:0 10px">Page Views: 284K (23.7%)</div>
+            <div style="background:rgba(108,99,255,0.45);border-radius:6px;padding:10px;text-align:center;font-size:13px;margin:0 25px">Installs: 48.3K (17%)</div>
+            <div style="background:rgba(108,99,255,0.2);border-radius:6px;padding:10px;text-align:center;font-size:13px;margin:0 40px">Active Users: 31.2K (64.6%)</div>
+          </div>
+        </div>
+        <div class="card"><div class="section-title">By Device</div>
+          <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
+            <div class="flex-between text-sm"><span>📱 iPhone</span><span>61%</span></div>
+            <div class="progress"><div class="progress-fill" style="width:61%;background:var(--accent)"></div></div>
+            <div class="flex-between text-sm"><span>📱 iPad</span><span>18%</span></div>
+            <div class="progress"><div class="progress-fill" style="width:18%;background:var(--accent2)"></div></div>
+            <div class="flex-between text-sm"><span>🤖 Android Phone</span><span>17%</span></div>
+            <div class="progress"><div class="progress-fill" style="width:17%;background:var(--warning)"></div></div>
+            <div class="flex-between text-sm"><span>🤖 Android Tablet</span><span>4%</span></div>
+            <div class="progress"><div class="progress-fill" style="width:4%;background:var(--success)"></div></div>
+          </div>
+        </div>
+        <div class="card"><div class="section-title">Conversion Tips</div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
+            <div style="padding:10px;background:rgba(86,204,157,0.1);border-radius:8px;border-left:3px solid var(--success);font-size:13px">✅ Add video preview to increase installs by ~25%</div>
+            <div style="padding:10px;background:rgba(247,183,49,0.1);border-radius:8px;border-left:3px solid var(--warning);font-size:13px">⚠️ Update screenshots with current UI</div>
+            <div style="padding:10px;background:rgba(252,92,101,0.1);border-radius:8px;border-left:3px solid var(--danger);font-size:13px">🔴 Description missing top 3 keywords</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="anal-geographic" style="display:none">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Country</th><th>Downloads</th><th>Revenue</th><th>Rating</th><th>Rank</th><th>Growth</th></tr></thead>
+          <tbody>
+            <tr><td>🇺🇸 United States</td><td>18,420</td><td>$24.1K</td><td>⭐ 4.7</td><td>#3</td><td class="text-success">↑14%</td></tr>
+            <tr><td>🇬🇧 United Kingdom</td><td>5,210</td><td>$7.8K</td><td>⭐ 4.6</td><td>#8</td><td class="text-success">↑9%</td></tr>
+            <tr><td>🇮🇳 India</td><td>8,940</td><td>$3.2K</td><td>⭐ 4.5</td><td>#12</td><td class="text-success">↑31%</td></tr>
+            <tr><td>🇵🇰 Pakistan</td><td>3,120</td><td>$1.1K</td><td>⭐ 4.8</td><td>#7</td><td class="text-success">↑44%</td></tr>
+            <tr><td>🇩🇪 Germany</td><td>2,880</td><td>$4.9K</td><td>⭐ 4.4</td><td>#19</td><td class="text-danger">↓3%</td></tr>
+            <tr><td>🇦🇺 Australia</td><td>2,340</td><td>$3.6K</td><td>⭐ 4.6</td><td>#11</td><td class="text-success">↑7%</td></tr>
+            <tr><td>🇨🇦 Canada</td><td>2,180</td><td>$3.1K</td><td>⭐ 4.5</td><td>#14</td><td class="text-success">↑5%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// Navigation
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(el) el.classList.add('active');
+}
+
+// Tab switching
+function switchKwTab(id, el) {
+  document.querySelectorAll('#kw-research,#kw-tracked,#kw-suggestions').forEach(t => t.style.display='none');
+  document.getElementById('kw-'+id).style.display='block';
+  el.closest('.tabs').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+function switchAnalTab(id, el) {
+  document.querySelectorAll('#anal-overview,#anal-conversion,#anal-geographic').forEach(t=>t.style.display='none');
+  document.getElementById('anal-'+id).style.display='block';
+  el.closest('.tabs').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// Download chart
+const dlData = [1800,2100,1950,2400,2800,3100,2700,3400,3900,4200,4800,5200,4600,5800,6100,5500,6800,7200,6500,7900,8100,7400,8600,9100,8400,9800,10200,9600,11000,11800];
+const dlLabels = ['Jun 1','','','','5','','','','9','','','','13','','','','17','','','','21','','','','25','','','','29','30'];
+const dlChart = document.getElementById('downloadChart');
+dlData.forEach((v,i) => {
+  const bar = document.createElement('div');
+  bar.className='bar';
+  bar.style.cssText=`height:${Math.round(v/dlData.reduce((a,b)=>Math.max(a,b))*100)}%;background:${i>=25?'#6c63ff':'rgba(108,99,255,0.5)'}`;
+  bar.title=`${dlLabels[i]||''}: ${v.toLocaleString()} downloads`;
+  dlChart.appendChild(bar);
+});
+const dlLabelEl = document.getElementById('downloadLabels');
+dlData.forEach((_,i)=>{const l=document.createElement('div');l.className='bar-label-item';l.textContent=i%5===0?dlLabels[i]:'';dlLabelEl.appendChild(l);});
+
+// Monthly chart
+const moData=[28000,31000,26000,34000,38000,42000,39000,45000,48000,51000,46000,54000];
+const moLabels=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const moChart=document.getElementById('monthlyChart');
+moData.forEach((v,i)=>{const bar=document.createElement('div');bar.className='bar';bar.style.cssText=`height:${Math.round(v/Math.max(...moData)*100)}%;background:${i===8?'#6c63ff':'rgba(78,205,196,0.6)'}`;bar.title=`${moLabels[i]}: ${v.toLocaleString()}`;moChart.appendChild(bar);});
+const moLabelEl=document.getElementById('monthlyLabels');
+moLabels.forEach(l=>{const d=document.createElement('div');d.className='bar-label-item';d.textContent=l;moLabelEl.appendChild(d);});
+
+// Rating bars
+const ratings=[{stars:5,pct:68,col:'#56cc9d'},{stars:4,pct:18,col:'#f7b731'},{stars:3,pct:7,col:'#fd9644'},{stars:2,pct:4,col:'#fc5c65'},{stars:1,pct:3,col:'#fc5c65'}];
+const rbEl=document.getElementById('ratingBars');
+ratings.forEach(r=>{rbEl.innerHTML+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:12px;color:var(--muted);width:40px">${r.stars}★</span><div style="flex:1;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden"><div style="width:${r.pct}%;height:100%;background:${r.col};border-radius:4px"></div></div><span style="font-size:12px;color:var(--muted);width:30px">${r.pct}%</span></div>`;});
+
+// Keywords search
+const sampleKws=[
+  {kw:'photo editor',vol:'98K',diff:72,rank:'#3',trend:[3,5,4,3,3,3,3]},
+  {kw:'image enhancer',vol:'54K',diff:58,rank:'#7',trend:[12,10,9,8,7,7,7]},
+  {kw:'ai photo filter',vol:'120K',diff:85,rank:'#15',trend:[18,16,15,14,15,16,15]},
+  {kw:'background remover',vol:'67K',diff:63,rank:'#9',trend:[11,10,10,9,9,9,9]},
+  {kw:'selfie editor',vol:'41K',diff:44,rank:'#22',trend:[30,28,26,24,23,22,22]},
+  {kw:'portrait mode app',vol:'33K',diff:39,rank:'#18',trend:[22,20,19,19,18,18,18]},
+  {kw:'photo collage maker',vol:'88K',diff:71,rank:'#11',trend:[15,13,12,11,11,11,11]},
+  {kw:'hd camera filter',vol:'29K',diff:31,rank:'#6',trend:[8,7,6,6,6,6,6]},
+];
+
+function searchKeywords() {
+  const q = document.getElementById('kwInput').value.trim().toLowerCase();
+  const results = q ? sampleKws.filter(k=>k.kw.includes(q)||q.split(' ').some(w=>k.kw.includes(w))) : sampleKws;
+  renderKwTable(results.length ? results : sampleKws);
+}
+
+function renderKwTable(data) {
+  const tbody = document.getElementById('kwBody');
+  tbody.innerHTML = data.map(k => {
+    const diffColor = k.diff<40?'var(--success)':k.diff<65?'var(--warning)':'var(--danger)';
+    const diffLabel = k.diff<40?'Easy':k.diff<65?'Medium':'Hard';
+    const sparkline = k.trend.map((v,i)=>`<div style="width:5px;height:${Math.round((8-v)/8*30+4)}px;background:${i===6?'var(--accent)':'rgba(108,99,255,0.4)'};border-radius:2px 2px 0 0"></div>`).join('');
+    return `<tr>
+      <td><span class="fw-600">${k.kw}</span></td>
+      <td>${k.vol}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;width:60px"><div style="width:${k.diff}%;height:100%;background:${diffColor};border-radius:3px"></div></div>
+          <span style="font-size:11px;color:${diffColor}">${diffLabel}</span>
+        </div>
+      </td>
+      <td><span class="badge ${parseInt(k.rank.slice(1))<10?'badge-green':'badge-yellow'}">${k.rank}</span></td>
+      <td><div style="display:flex;align-items:flex-end;gap:2px;height:30px">${sparkline}</div></td>
+      <td><button class="btn btn-sm btn-outline" onclick="this.textContent='✅ Tracked';this.disabled=true">+ Track</button></td>
+    </tr>`;
+  }).join('');
+}
+renderKwTable(sampleKws);
+
+// Competitor data
+const competitors=[
+  {name:'Snapseed',icon:'📷',bg:'#1a73e8',rank:'#2',rating:'4.8',downloads:'5.2M',kws:312},
+  {name:'VSCO',icon:'🎨',bg:'#000',rank:'#5',rating:'4.6',downloads:'3.8M',kws:284},
+  {name:'PicsArt',icon:'🖼️',bg:'#e91e63',rank:'#1',rating:'4.5',downloads:'8.1M',kws:421},
+  {name:'Lightroom',icon:'🌅',bg:'#31a8ff',rank:'#8',rating:'4.7',downloads:'4.2M',kws:198},
+];
+const compList=document.getElementById('compList');
+competitors.forEach(c=>{
+  compList.innerHTML+=`<div class="comp-card">
+    <div class="app-icon" style="background:${c.bg}">${c.icon}</div>
+    <div style="flex:1">
+      <div class="flex-between"><span class="fw-600">${c.name}</span><button class="btn btn-sm btn-outline text-danger" style="font-size:11px">Remove</button></div>
+      <div style="display:flex;gap:16px;margin-top:6px">
+        <span class="text-sm text-muted">Rank: <span class="text-accent">${c.rank}</span></span>
+        <span class="text-sm text-muted">Rating: <span class="text-warning">${c.rating}⭐</span></span>
+        <span class="text-sm text-muted">Downloads: <span class="text-success">${c.downloads}</span></span>
+        <span class="text-sm text-muted">Keywords: <span>${c.kws}</span></span>
+      </div>
+    </div>
+  </div>`;
+});
+
+// Ranking comparison
+const rankEl=document.getElementById('rankComp');
+[{name:'Your App',rank:14,color:'var(--accent)'},{name:'Snapseed',rank:2,color:'var(--danger)'},{name:'VSCO',rank:5,color:'var(--warning)'},{name:'PicsArt',rank:1,color:'var(--danger)'},{name:'Lightroom',rank:8,color:'var(--warning)'}].forEach(a=>{
+  rankEl.innerHTML+=`<div><div class="flex-between text-sm mb-16"><span>${a.name}</span><span style="color:${a.color}">#${a.rank}</span></div><div class="progress"><div class="progress-fill" style="width:${Math.round((50-a.rank)/50*100)}%;background:${a.color}"></div></div></div>`;
+});
+const ratingEl=document.getElementById('ratingComp');
+[{name:'Your App',r:4.6,color:'var(--accent)'},{name:'Snapseed',r:4.8,color:'var(--danger)'},{name:'VSCO',r:4.6,color:'var(--warning)'},{name:'PicsArt',r:4.5,color:'var(--danger)'},{name:'Lightroom',r:4.7,color:'var(--warning)'}].forEach(a=>{
+  ratingEl.innerHTML+=`<div><div class="flex-between text-sm mb-16"><span>${a.name}</span><span style="color:${a.color}">⭐ ${a.r}</span></div><div class="progress"><div class="progress-fill" style="width:${a.r/5*100}%;background:${a.color}"></div></div></div>`;
+});
+
+function addCompetitor() { alert('Enter app name or Play Store/App Store URL to add competitor tracking.'); }
+
+// Reviews
+const reviewsData=[
+  {user:'Sarah M.',stars:5,text:'Absolutely love this app! The filters are stunning and the editing tools are super intuitive. Best photo editor I\'ve used.',date:'2 hours ago',country:'🇺🇸',version:'v2.4.1',responded:false},
+  {user:'Ahmed K.',stars:5,text:'Best app for editing photos. Very fast and easy to use. Highly recommend to everyone.',date:'5 hours ago',country:'🇵🇰',version:'v2.4.1',responded:true},
+  {user:'James R.',stars:2,text:'App keeps crashing when I try to export photos in high resolution. Very frustrating. Please fix this bug ASAP.',date:'8 hours ago',country:'🇬🇧',version:'v2.4.0',responded:false},
+  {user:'Priya S.',stars:4,text:'Really good app overall. The AI enhancements are amazing. Just wish the free version had more filters.',date:'1 day ago',country:'🇮🇳',version:'v2.4.1',responded:true},
+  {user:'Michael T.',stars:1,text:'Terrible update. They removed my favorite features and now it\'s just a paid subscription trap. Uninstalling.',date:'1 day ago',country:'🇦🇺',version:'v2.4.1',responded:false},
+  {user:'Lisa W.',stars:5,text:'This app transformed my photography! The portrait mode enhancements are incredible. Worth every penny.',date:'2 days ago',country:'🇨🇦',version:'v2.4.1',responded:true},
+];
+const revList=document.getElementById('reviewList');
+reviewsData.forEach(r=>{
+  const stars='★'.repeat(r.stars)+'☆'.repeat(5-r.stars);
+  const sentColor=r.stars>=4?'var(--success)':r.stars===3?'var(--warning)':'var(--danger)';
+  revList.innerHTML+=`<div class="review-card">
+    <div class="review-header">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600">${r.user[0]}</div>
+        <div>
+          <div class="fw-600 text-sm">${r.user} ${r.country}</div>
+          <div style="color:${sentColor};font-size:14px">${stars}</div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="text-sm text-muted">${r.date}</div>
+        <div class="text-sm text-muted">${r.version}</div>
+      </div>
+    </div>
+    <div class="review-text">"${r.text}"</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+      <span class="badge ${r.responded?'badge-green':'badge-red'}">${r.responded?'✓ Responded':'⚠ Needs Response'}</span>
+      ${!r.responded?`<button class="btn btn-sm btn-outline" onclick="this.parentElement.previousElementSibling.nextElementSibling.style.display='block';this.parentElement.style.display='none'">💬 Reply</button>`:''}
+    </div>
+    ${!r.responded?`<div style="display:none;margin-top:12px"><textarea style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-size:13px;resize:vertical" rows="3" placeholder="Type your response..."></textarea><div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-sm btn-primary">Send Reply</button><button class="btn btn-sm btn-outline">Use Template</button></div></div>`:''}
+  </div>`;
+});
+</script>
+</body>
+</html>
